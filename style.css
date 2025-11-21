@@ -1,0 +1,162 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html,body { height:100%; }
+
+body {
+  font-family: 'Poppins', sans-serif;
+  overflow: hidden;
+  background: linear-gradient(135deg, #0f0c29, #302b63, #ff007f);
+  background-size: 400% 400%;
+  animation: bgFlow 12s ease infinite;
+  color: white;
+  height: 100vh;
+}
+
+@keyframes bgFlow { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+
+/* --------- INTRO / SUSPENSE --------- */
+.intro-screen {
+  position: absolute;
+  inset: 0;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  z-index: 4;
+}
+.mystery { text-align:center; pointer-events:none; }
+.mystery-box {
+  font-size: 110px;
+  transform-origin:center;
+  animation: floatMyst 1.4s ease-in-out infinite;
+  filter: drop-shadow(0 10px 20px rgba(0,0,0,0.35));
+}
+
+.mystery h2 { color:#ffb7f5; margin-top:12px; font-size:22px; font-weight:600; }
+@keyframes floatMyst { 0%{transform:translateY(0)}50%{transform:translateY(-18px)}100%{transform:translateY(0)} }
+
+/* --------- CHAT LAYOUT --------- */
+.chat-container {
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-end;
+  padding:20px;
+  height:100vh;
+  z-index:1;
+}
+
+/* scrollable chat area */
+.chat-area {
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  overflow-y:auto;
+  padding-bottom:12px;
+  max-height:calc(100vh - 120px);
+  width:100%;
+}
+
+/* message wrapper */
+.msg-wrapper {
+  display:flex;
+  flex-direction:column;
+  max-width:85%;
+  gap:6px;
+}
+
+/* left / right */
+.msg-wrapper.aman { align-self:flex-start; margin-left:6px; }
+.msg-wrapper.sonali { align-self:flex-end; margin-right:6px; }
+
+/* name above bubble */
+.sender-name { font-size:12px; color:rgba(255,255,255,0.75); margin-left:6px; margin-right:6px; }
+
+/* bubble visual */
+.chat-bubble {
+  padding:10px 14px;
+  border-radius:14px;
+  font-size:15px;
+  line-height:1.3;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+  word-wrap:break-word;
+}
+
+/* Sonali (right) */
+.chat-bubble.sonali {
+  background: linear-gradient(135deg,#a100ff,#ff4da6);
+  color:white;
+  border-bottom-right-radius:4px;
+  max-width: 75%;
+}
+
+/* Aman (left) */
+.chat-bubble.aman {
+  background: linear-gradient(135deg,#2b2b2b,#3a2a57);
+  color:#fff;
+  border-bottom-left-radius:4px;
+  max-width: 75%;
+}
+
+/* link style */
+.link-message { text-decoration:underline; cursor:pointer; font-weight:700; }
+
+/* controls (spin) */
+.controls { display:flex; justify-content:center; padding:10px 0 30px 0; }
+#spinBtn {
+  padding:12px 24px; border-radius:25px; border:none;
+  background:linear-gradient(135deg,#ff007f,#a100ff); color:#fff; font-size:16px; cursor:pointer;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+#spinBtn:hover { transform:translateY(-3px); box-shadow:0 12px 30px rgba(161,0,255,0.18); }
+
+/* typing indicator */
+.typing-wrapper { display:flex; gap:8px; align-items:center; margin:8px; }
+.typing-name { font-size:12px; color:rgba(255,255,255,0.75); }
+.typing { display:flex; gap:5px; align-items:center; }
+.dot { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,0.6); animation: blink 1s infinite; opacity:.3; }
+.dot:nth-child(2){ animation-delay:.12s } .dot:nth-child(3){ animation-delay:.24s }
+@keyframes blink { 0%{opacity:.2}50%{opacity:1}100%{opacity:.2} }
+
+/* confetti canvas */
+#confetti { position:absolute; inset:0; pointer-events:none; z-index:2; }
+
+/* hidden helper */
+.hidden { display:none; }
+
+/* --------- SCRATCH POPUP (shared by wheel page as well) --------- */
+.scratch-popup {
+  position: fixed; inset:0;
+  background: rgba(0,0,0,0.6);
+  display:flex; justify-content:center; align-items:center;
+  z-index:9999; padding:20px;
+}
+.scratch-card {
+  width:100%; max-width:380px; background:#fff; color:#111; border-radius:16px;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.45);
+  padding:18px; text-align:center; position:relative;
+}
+.scratch-card h3 { margin-top:2px; color:#ff007f; font-size:18px; }
+.scratch-canvas {
+  width:100%; height:160px; margin-top:12px; border-radius:12px; overflow:hidden; border: 2px solid rgba(0,0,0,0.08);
+  background: linear-gradient(180deg,#fff8fb,#ffeef9);
+}
+.revealed-text {
+  margin-top:14px; font-size:18px; font-weight:700; color:#a100ff; display:flex; gap:8px; align-items:center; justify-content:center;
+}
+.revealed-emoji { font-size:28px; animation: pop 0.7s ease both; }
+@keyframes pop { 0%{transform:scale(.6);opacity:0}60%{transform:scale(1.12);opacity:1}100%{transform:scale(1)} }
+
+/* close/back button in modal */
+.scratch-close {
+  margin-top:12px; padding:10px 16px; border-radius:12px; border:none; cursor:pointer;
+  background: linear-gradient(135deg,#a100ff,#ff007f); color:#fff; font-weight:700;
+}
+
+/* small responsive tweaks */
+@media (max-width:600px) {
+  .mystery-box { font-size:84px; }
+  .mystery h2 { font-size:18px; }
+  .scratch-card { padding:14px; }
+  .scratch-canvas { height:140px; }
+}

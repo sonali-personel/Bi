@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Birthday Surprise — Sonali → Aman</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- SUSPENSE INTRO (not obviously a cake) -->
+  <div class="intro-screen" id="intro">
+    <div class="mystery">
+      <div class="mystery-box">🎁</div>
+      <h2>Shh... there's something for you <br> <button style="border-radius: 20% ; color:white; background-color: purple;">Click the button</button></h2>
+    </div>
+  </div>
+
+  <!-- CHAT SECTION -->
+  <div class="chat-container hidden" id="chat">
+    <div id="chatArea" class="chat-area"></div>
+    <div class="controls">
+      <button id="spinBtn" class="hidden">🎡 Spin the Wheel of Surprises</button>
+    </div>
+  </div>
+
+  <!-- confetti canvas -->
+  <canvas id="confetti"></canvas>
+
+  <!-- audio (optional) -->
+  <audio id="birthdaySound" src="assests/bg_music.mp3" preload="auto"></audio>
+
+  <script src="script.js"></script>
+</body>
+</html>

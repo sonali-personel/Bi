@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Wheel of Surprises 🎡</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Page-specific styles (keeps main theme) */
+    :root {
+      --pink1: #ff007f;
+      --purple1: #a100ff;
+      --accent: #ff79d1;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #ff007f);
+      background-size: 400% 400%;
+      animation: bgFlow 12s ease infinite;
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    @keyframes bgFlow {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .container {
+      width: 100%;
+      max-width: 980px;
+      padding: 24px;
+      display: flex;
+      gap: 24px;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+
+    h1 { margin: 0 0 6px 0; font-size: 22px; color: var(--accent); text-align:center; }
+    p.lead { margin: 0 0 16px 0; color: rgba(255,255,255,0.85); text-align:center; }
+
+    /* Wheel canvas */
+    #wheelWrap { position: relative; display:flex; align-items:center; justify-content:center; }
+    canvas#wheel {
+      width: 420px;
+      height: 420px;
+      border-radius: 50%;
+      box-shadow: 0 26px 50px rgba(0,0,0,0.45);
+      background: transparent;
+      display:block;
+      touch-action: none;
+    }
+
+    /* Spin & back buttons */
+    .controls { display:flex; gap:12px; align-items:center; justify-content:center; margin-top:8px; }
+    button.btn {
+      padding: 12px 22px;
+      border-radius: 24px;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+      color: #fff;
+    }
+    button#spin {
+      background: linear-gradient(135deg,var(--pink1),var(--purple1));
+      box-shadow: 0 14px 36px rgba(161,0,255,0.15);
+    }
+    button#back {
+      background: transparent;
+      border: 2px solid rgba(255,255,255,0.12);
+    }
+
+    #result { margin-top: 10px; color: var(--accent); font-weight:700; min-height:26px; text-align:center; }
+
+    /* WIN confetti canvas over the page */
+    canvas#winConfetti { position: fixed; inset: 0; pointer-events: none; z-index: 1000; }
+
+    /* -------- SCRATCH-STYLE POPUP -------- */
+    #scratchPopup {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      padding: 20px;
+    }
+    .scratch-card {
+      width: 100%;
+      max-width: 380px;
+      background: #fff;
+      color: #111;
+      border-radius: 16px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+      padding: 18px;
+      text-align: center;
+      transform-origin: center;
+      animation: popIn .35s ease;
+      cursor: pointer;
+    }
+    @keyframes popIn { from { transform: scale(.8); opacity: 0 } to { transform: scale(1); opacity: 1 } }
+
+    .scratch-title { font-size: 18px; color: var(--pink1); margin-bottom: 8px; font-weight:700; }
+    .scratch-sub { font-size: 13px; color: #555; margin-bottom: 10px; }
+    .scratch-area {
+      height: 150px;
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 8px 0;
+      background: linear-gradient(180deg,#fff8fb,#ffeef9);
+      border: 2px solid rgba(0,0,0,0.06);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position: relative;
+    }
+    .scratch-surface {
+      position:absolute; inset:0; background:#bdbdbd; /* silver overlay */
+      display:flex; align-items:center; justify-content:center;
+    }
+    .revealed {
+      display:none;
+      font-size:18px; font-weight:700; color: #a100ff; align-items:center; gap:10px;
+    }
+    .revealed.show { display:flex; flex-direction:column; }
+
+    .reveal-emoji { font-size:36px; animation: pop .6s both; }
+    @keyframes pop { 0%{transform:scale(.6);opacity:0}60%{transform:scale(1.08);opacity:1}100%{transform:scale(1)} }
+
+    .scratch-hint { font-size:13px; color:#333; opacity:0.85; margin-top:8px; }
+    .scratch-close {
+      margin-top:12px; padding:10px 16px; border-radius:12px; border:none; cursor:pointer;
+      background: linear-gradient(135deg,var(--purple1),var(--pink1)); color:#fff; font-weight:700;
+    }
+
+    /* small responsive */
+    @media (max-width:540px){
+      canvas#wheel { width: 320px; height: 320px; }
+      .scratch-card { max-width: 320px; padding: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎡 Spin the Wheel of Surprises</h1>
+    <p class="lead">Try your luck — spin and reveal a special surprise from Sonali 💜</p>
+
+    <div id="wheelWrap">
+      <canvas id="wheel" width="420" height="420" aria-label="Surprise wheel"></canvas>
+
+    </div>
+
+    <div class="controls">
+      <button id="spin" class="btn">SPIN</button>
+      <button id="back" class="btn" style="display:none;">⬅ Back to Chat</button>
+    </div>
+
+    <div id="result"></div>
+  </div>
+
+  <canvas id="winConfetti"></canvas>
+
+  <!-- SCRATCH-STYLE POPUP -->
+  <div id="scratchPopup" role="dialog" aria-modal="true">
+    <div class="scratch-card" id="scratchCard" tabindex="0" aria-label="Scratch card (click to reveal)">
+      <div class="scratch-title">Scratch Card</div>
+      <div class="scratch-sub">Tap the card to reveal your surprise</div>
+
+      <div class="scratch-area" id="scratchArea">
+        <div class="scratch-surface" id="scratchSurface">  
+          <div style="color:#222; font-weight:700;">Scratch Here</div>
+        </div>
+        <div class="revealed" id="revealed">
+          <div class="reveal-emoji" id="revealEmoji">🎁</div>
+          <div id="revealText" style="text-align:center;"></div>
+        </div>
+      </div>
+
+      <div class="scratch-hint">(No need to actually scratch — just tap the card)</div>
+      <button id="scratchClose" class="scratch-close" style="display:none;">Back to Chat</button>
+    </div>
+  </div>
+
+  <audio id="spinSound" src="assests/spin.mp3" preload="auto"></audio>
+  <audio id="rewardSound" src="assests/birthday.mp3" preload="auto"></audio>
+
+
+<script>
+/* ---------- Data (your 8 slices) ---------- */
+
+const spinSound = document.getElementById('spinSound');
+const rewardSound = document.getElementById('rewardSound');
+
+const slices = [
+  "💌 1 Beautiful Note from me",
+  "📞 1 Hour Voice Call with me",
+  "📹 1 Hour Video Call with me",
+  "💬 1 Hour WhatsApp Chat with me",
+  "🕒 1 Hour Spend Time with me",
+  "🚗 1 Long Drive with me",
+  "🎶 1 Beautiful Song from me",
+  "🎤 1 Beautiful Voice Note from me"
+];
+
+const colors = ["#ff007f","#a100ff","#ff79d1","#b721ff","#21d4fd","#ff9a9e","#302b63","#c471ed"];
+
+/* ---------- Wheel drawing & spin ---------- */
+const wheelCanvas = document.getElementById('wheel');
+const ctx = wheelCanvas.getContext('2d', { alpha: true });
+
+const cx = wheelCanvas.width/2;
+const cy = wheelCanvas.height/2;
+const radius = Math.min(cx, cy) - 8;
+const arc = (2 * Math.PI) / slices.length;
+
+let angle = 0;       // current rotation
+let spinning = false;
+let velocity = 0;
+
+function drawWheel() {
+  ctx.clearRect(0,0,wheelCanvas.width,wheelCanvas.height);
+
+  for (let i = 0; i < slices.length; i++) {
+    const start = angle + i * arc;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, radius, start, start + arc, false);
+    ctx.closePath();
+    ctx.fillStyle = colors[i % colors.length];
+    ctx.fill();
+
+    // label
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(start + arc/2);
+    ctx.textAlign = "right";
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 14px Poppins";
+    drawWrappedText(ctx, slices[i], radius - 16, 0, 16);
+    ctx.restore();
+  }
+
+  // pointer (top)
+  ctx.beginPath();
+  ctx.moveTo(cx - 14, cy - radius + 6);
+  ctx.lineTo(cx + 14, cy - radius + 6);
+  ctx.lineTo(cx, cy - radius - 18);
+  ctx.fillStyle = "#fff";
+  ctx.fill();
+}
+
+function drawWrappedText(ctx, text, x, y, lh) {
+  const parts = text.split(' ');
+  let line = '';
+  const lines = [];
+  for (let n=0; n<parts.length; n++) {
+    const test = line + parts[n] + ' ';
+    const metrics = ctx.measureText(test);
+    if (metrics.width > 140 && n > 0) {
+      lines.push(line);
+      line = parts[n] + ' ';
+    } else {
+      line = test;
+    }
+  }
+  lines.push(line);
+  for (let i=0;i<lines.length;i++){
+    ctx.fillText(lines[i], x, y + (i - (lines.length-1)/2) * lh);
+  }
+}
+
+/* initial draw */
+drawWheel();
+
+/* spin controls */
+const spinBtn = document.getElementById('spin');
+const backBtn = document.getElementById('back');
+const resultEl = document.getElementById('result');
+
+spinBtn.addEventListener('click', () => {
+  try { spinSound.currentTime = 0; spinSound.play(); } catch(e){}
+
+  if (spinning) return;
+  // random initial velocity, tuned
+  velocity = 0.45 + Math.random() * 0.9;
+  spinning = true;
+  resultEl.textContent = '';
+  animateSpin();
+});
+
+/* animate spin with friction */
+function animateSpin() {
+  if (!spinning) return;
+  // friction
+  velocity *= 0.987;
+  if (velocity < 0.0015) {
+    spinning = false;
+    // ensure some final tiny rotation to settle
+    finalizeSpin();
+    return;
+  }
+  angle += velocity;
+  drawWheel();
+  requestAnimationFrame(animateSpin);
+}
+
+/* When spin finishes */
+function finalizeSpin() {
+  drawWheel();
+  // determine result
+  const deg = ((angle % (2*Math.PI)) + 2*Math.PI) % (2*Math.PI);
+  // pointer is at top; compute index
+  const idx = (slices.length - Math.floor((deg)/(2*Math.PI) * slices.length)) % slices.length;
+  const prize = slices[idx];
+  // show scratch popup with this prize after short delay
+  setTimeout(() => {
+    showScratchPopup(prize);
+  }, 450);
+}
+
+/* ---------- Scratch-style popup (click to reveal) ---------- */
+const scratchPopup = document.getElementById('scratchPopup');
+const scratchSurface = document.getElementById('scratchSurface');
+const revealedEl = document.getElementById('revealed');
+const revealText = document.getElementById('revealText');
+const revealEmoji = document.getElementById('revealEmoji');
+const scratchClose = document.getElementById('scratchClose');
+
+function showScratchPopup(prize) {
+  // prepare prize display
+  // prize includes emoji at start; split
+  const firstSpace = prize.indexOf(' ');
+  let emoji = '🎁';
+  let text = prize;
+  if (firstSpace > 0) {
+    emoji = prize.slice(0, firstSpace);
+    text = prize.slice(firstSpace + 1);
+  }
+  revealEmoji.textContent = emoji;
+  revealText.textContent = text;
+
+  // reset popup UI
+  revealedEl.classList.remove('show');
+  scratchSurface.style.display = 'flex';
+  scratchPopup.style.display = 'flex';
+  scratchPopup.dataset.prize = prize;
+  scratchClose.style.display = 'none';
+  backBtn.style.display = 'none';
+  // click-to-reveal handler
+  const onReveal = () => {
+
+    // 🎵 play reward sound here
+    try { 
+      rewardSound.currentTime = 0;
+      rewardSound.play();
+    } catch (e) {}
+    // show reveal area
+    scratchSurface.style.display = 'none';
+    revealedEl.classList.add('show');
+    // celebration
+    runWinConfetti();
+    // store prize for chat page
+    localStorage.setItem('prize', prize);
+    scratchClose.style.display = 'inline-block';
+    backBtn.style.display = 'inline-block';
+    // remove listener so accidental repeats don't matter
+    scratchCard.removeEventListener('click', onReveal);
+  };
+
+  const scratchCard = document.getElementById('scratchCard');
+  scratchCard.focus();
+  // attach once
+  scratchCard.removeEventListener('click', onReveal); // ensure idempotent
+  scratchCard.addEventListener('click', onReveal, { once: true });
+}
+
+/* close popup -> back to chat, keep prize stored */
+scratchClose.addEventListener('click', () => {
+  scratchPopup.style.display = 'none';
+  localStorage.setItem('fromWheel', 'true');
+  // navigate back to chat (index.html)
+  window.location.href = 'index.html';
+});
+
+/* Back button (in case user doesn't want to reveal) */
+backBtn.addEventListener('click', () => {
+  // store prize placeholder and go back
+  localStorage.setItem('prize', '(no reveal)');
+  localStorage.setItem('fromWheel', 'true');
+  window.location.href = 'index.html';
+});
+
+/* ---------- Win confetti (on reveal) ---------- */
+function runWinConfetti() {
+  const canvas = document.getElementById('winConfetti');
+  if (!canvas || !canvas.getContext) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const parts = [];
+  const cols = ["#ff007f","#a100ff","#ff79d1","#ffffff","#c471ed"];
+  for (let i=0;i<180;i++){
+    parts.push({
+      x: Math.random()*canvas.width,
+      y: Math.random()*-canvas.height,
+      w: 6 + Math.random()*12,
+      h: 6 + Math.random()*8,
+      color: cols[Math.floor(Math.random()*cols.length)],
+      speed: 3 + Math.random()*6,
+      rot: Math.random()*360
+    });
+  }
+  let frames = 0;
+  function step() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    parts.forEach(p => {
+      p.x += Math.sin(p.rot)*0.6;
+      p.y += p.speed;
+      p.rot += 0.05;
+      ctx.save();
+      ctx.translate(p.x,p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+      ctx.restore();
+      if (p.y > canvas.height + 30) p.y = -30 - Math.random()*canvas.height;
+    });
+    frames++;
+    if (frames < 350) requestAnimationFrame(step);
+    else ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+  step();
+}
+
+/* handle resize */
+window.addEventListener('resize', () => {
+  const c = document.getElementById('winConfetti');
+  if (c) { c.width = window.innerWidth; c.height = window.innerHeight; }
+  drawWheel();
+});
+
+/* initial sizing for win confetti canvas */
+(function init() {
+  const c = document.getElementById('winConfetti');
+  if (c) { c.width = window.innerWidth; c.height = window.innerHeight; }
+})();
+</script>
+</body>
+</html>
